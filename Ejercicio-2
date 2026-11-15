@@ -1,0 +1,118 @@
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+class Actividad {
+  private static final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+private final LocalDate fecha;
+private final LocalTime hora;
+private final String sector;
+private final String descripcion;
+
+public Actividad(String sector, String descripcion) {
+  LocalDateTime ahora = LocalDateTime.now();
+this.fecha = ahora.toLocalDate();
+this.hora = ahora.toLocalTime();
+this.sector = sector;
+this.descripcion = descripcion;
+}
+public String obtenerSector() {
+  return sector;
+}
+public String toString() {
+return "[" + fecha + " " + hora.format(formatoHora) + "] " + sector + ": " + descripcion;
+}
+}
+class RegistroActividades {
+private static RegistroActividades instancia = null;
+private List<Actividad> actividades;
+
+private RegistroActividades() {
+actividades = new ArrayList<>();
+}
+public static RegistroActividades obtenerInstancia() {
+if (instancia == null) {
+instancia = new RegistroActividades();
+}
+return instancia;
+¿}
+public void registrar(String sector, String descripcion) {
+  if (sector == null || sector.trim().isEmpty() || descripcion == null || descripcion.trim().isEmpty()) {
+System.out.println("Error: el sector y la descripción no pueden estar vacíos.");
+return;
+}
+actividades.add(new Actividad(sector, descripcion));
+}
+public List<Actividad> obtenerHistorial() {
+return List.copyOf(actividades);
+}
+public List<Actividad> filtrarPorSector(String sector) {
+List<Actividad> resultado = new ArrayList<>();
+for (Actividad actividad : actividades) {
+  if (actividad.obtenerSector().equalsIgnoreCase(sector)) {
+resultado.add(actividad);
+}
+}
+  return resultado;
+}
+public int cantidadEventos() {
+return actividades.size();
+}
+}
+class Sector {
+private String nombre;
+private RegistroActividades registro;
+public Sector(String nombre) {
+this.nombre = nombre;
+this.registro = RegistroActividades.obtenerInstancia();
+}
+public RegistroActividades obtenerRegistro() {
+return registro;
+}
+public void realizarActividad(String descripcion) {
+registro.registrar(nombre, descripcion);
+}
+}
+public class Main {
+static void mostrar(List<Actividad> lista) {
+int numero = 1;
+  for (Actividad actividad : lista) {
+System.out.println(numero + ". " + actividad);
+numero++;
+ }
+}
+public static void main(String[] args) {
+Sector prestamos = new Sector("Préstamos");
+Sector devoluciones = new Sector("Devoluciones");
+Sector atencion = new Sector("Atención a socios");
+
+prestamos.realizarActividad("Préstamo del libro Rayuela al socio 101");
+devoluciones.realizarActividad("Devolución del libro Rayuela del socio 101");
+atencion.realizarActividad("Alta del nuevo socio 205");
+prestamos.realizarActividad("Préstamo del libro Ficciones al socio 205");
+devoluciones.realizarActividad("Devolución tardía del libro Ficciones del socio 205");
+
+RegistroActividades registro = RegistroActividades.obtenerInstancia();
+System.out.println("--- Historial completo (orden de incorporación) ---");
+mostrar(registro.obtenerHistorial());
+
+System.out.println("--- Actividades del sector Préstamos ---");
+mostrar(registro.filtrarPorSector("Préstamos"));
+
+System.out.println("Total de eventos registrados: " + registro.cantidadEventos());
+
+List<Actividad> copia = registro.obtenerHistorial();
+try {
+copia.clear();
+  } catch (UnsupportedOperationException error) {
+System.out.println("Intento de modificar el historial bloqueado.");
+}
+boolean mismoObjeto = prestamos.obtenerRegistro() == devoluciones.obtenerRegistro()
+    && devoluciones.obtenerRegistro() == atencion.obtenerRegistro();
+System.out.println("¿Los tres sectores usan el mismo registro? " + mismoObjeto);
+}
+}
